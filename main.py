@@ -2,6 +2,19 @@ from fastapi import FastAPI, HTTPException, status, Path, Response
 import json
 from pydantic import BaseModel, Field
 from typing import Annotated, Optional
+import sqlite3
+
+# Create Database
+database = sqlite3.connect("task.db")
+database = database.cursor()
+
+# Create tabes
+database.execute("""CREATE TABLE IF NOT EXISTS tasks(
+    id INTEGER PRIMARY KEY,
+    text TEXT,
+    done boolen)""")
+
+
 
 # Load data funcation
 def load_data():
@@ -9,9 +22,9 @@ def load_data():
         return json.load(f)
 
 # Save data funcation
-def save_data(data):
-    with open("data.json","w") as f:
-        json.dump(data,f)
+def save_data(id,text,done):
+    database.execute("""INSERT INTO tasks (id, text, done) 
+    VALUES (${id},${text},${done})""")
 
 app = FastAPI()
 
