@@ -16,15 +16,26 @@ database.execute("""CREATE TABLE IF NOT EXISTS tasks(
 
 
 
-# Load data funcation
-def load_data():
-    with open("data.json", "r") as f:
-        return json.load(f)
+# Load all data funcation
+def load_all_data():
+    for row in database.execute("""SELECT * FROM tasks"""):
+        print(row)
+
+# Load data from spcefic id
+def load_task_data(id: int):
+    cursor = database.execute("SELECT * FROM tasks WHERE id = ?", (id,))
+    row = cursor.fetchone()
+    if row:
+        return row
+    else : raise HTTPException(status_code=404, detail="Task not found")
+
+
+
 
 # Save data funcation
-def save_data(id,text,done):
-    database.execute("""INSERT INTO tasks (id, text, done) 
-    VALUES (${id},${text},${done})""")
+# def save_data(id: int, text: str, done: bool):
+#     database.execute("INSERT INTO tasks (id, text, done) VALUES (?,?,?)",
+#                      (id,text,done))
 
 app = FastAPI()
 
@@ -47,23 +58,19 @@ def read_health():
         "status": "ok"
     }
 
-# @app.get("/tasks")
-# def all_tasks():
-#     data = load_data()
-#     return data
+# get tasks and task from id
+@app.get("/tasks")
+def all_tasks():
+    data = load_all_data()
+    return data
 
-# @app.get("/tasks/{id}")
-# def task(id: int):
-#     data = load_data()
+@app.get("/tasks/{id}")
+def task(id: int):
+    data = load_task_data(id)
+    return data
 
-#     for task in data["tasks"]:
-#         if task["id"] == id:
-#             return task
-
-#         else : raise HTTPException(status_code=404, detail="Task not found")
-
-# Stage 3 start
-# create pydantic class
+#Stage 3 start
+#create pydantic class
 
 class task_create(BaseModel):
 
