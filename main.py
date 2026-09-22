@@ -33,9 +33,9 @@ def load_task_data(id: int):
 
 
 # Save data funcation
-# def save_data(id: int, text: str, done: bool):
-#     database.execute("INSERT INTO tasks (id, text, done) VALUES (?,?,?)",
-#                      (id,text,done))
+def save_data(id: int, text: str, done: bool):
+    database.execute("INSERT INTO tasks (id, text, done) VALUES (?,?,?)",
+                     (id,text,done))
 
 app = FastAPI()
 
@@ -79,24 +79,25 @@ class task_create(BaseModel):
 
 @app.post("/tasks",status_code=status.HTTP_201_CREATED)
 def create_task(task: task_create):
-
-    data = load_data()
-
+    
     if not task.title.strip():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title is empty")
 
-        raise HTTPException(status_code=400,detail="title is empty")
+    
+    cursor = database.execute("SELECT MAX(id) FROM tasks")
+    max_id_row = cursor.fetchone()
+    
+    new_id = (max_id_row[0] if max_id_row and max_id_row[0] is not None else 0) + 1
 
-    new_id = max((t["id"] for t in data["tasks"]), default=0)+1
+    
+    save_data(id=new_id, text=task.title, done=False)
 
-    new_task = {
+
+    return {
         "id": new_id,
         "title": task.title,
         "done": False
     }
-
-    data["tasks"].append(new_task)
-
-    save_data(data)
 
 # stage 4 start
 
