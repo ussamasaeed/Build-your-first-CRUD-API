@@ -103,45 +103,117 @@ def create_task(task: task_create):
 
 # pydantic class
 class task_update(BaseModel):
-    title: Annotated[Optional[str], Field(default=None)]
-    done: Annotated[Optional[str], Field(default=None)]
 
-# endpoint for update
-@app.put("/task/{id}")
-def update_task(id, update: task_update):
+    title: Annotated[
+        Optional[str],
+        Field(default=None)
+    ]
 
-    data = load_data()
-    update_data_only = update.model_dump(exclude_unset=True)
+    done: Annotated[
+        Optional[bool],
+        Field(default=None)
+    ]
 
-    for task in data["tasks"]:
-        
-        if str(task["id"]) == str(id): 
-            
-            for key, value in update_data_only.items():
-                task[key] = value
 
-            save_data(data)
-            return {"message": "Task updated successfully", "task": task}
+@app.put("/tasks/{id}")
+def update_task(
+    id: int,
+    update: task_update
+):
 
-    raise HTTPException(status_code=404, detail="id not found")
-    
-# Delete task endpoint
-@app.delete("/tasks/{id}", status_code=204)
-def delete_task(id: int):
-    data = load_data()
+    # First check whether task exists
+    load_task_data(id)
 
-    for i, task in enumerate(data["tasks"]):
-        if task["id"] == id:
-
-            # Remove task
-            data["tasks"].pop(i)
-
-            save_data(data)
-
-            # 204 = no response body
-            return Response(status_code=204)
-
-    raise HTTPException(
-        status_code=404,
-        detail="Task not found"
+    # Get only fields that were actually provided
+    update_data_only = update.model_dump(
+        exclude_unset=True
     )
+
+    # No data provided
+    if not update_data_only:
+
+        raise HTTPException(
+            status_code=400,
+            detail="No data provided for update"
+        )
+
+    
+    # Update title
+    
+
+    if "title" in update_data_only:
+
+        title = update_data_only["title"]
+
+        if not title.strip():
+
+            raise HTTPException(
+                status_code=400,
+                detail="Title is empty"
+            )
+
+        database.execute(
+            """
+            UPDATE tasks
+            SET text = ?
+            WHERE id = ?
+            """,
+            (title, id)
+        )
+
+    
+    # Update done
+    
+
+    if "done" in update_data_only:
+
+        done = update_data_only["done"]
+
+        database.execute(
+            """
+            UPDATE tasks
+            SET done = ?
+            WHERE id = ?
+            """,
+            (done, id)
+        )
+
+    # Save changes
+    database.connection.commit()
+
+    # Get updated task
+    updated_task = load_task_data(id)
+
+    return {
+        "message": "Task updated successfully",
+        "task": updated_task
+    }
+
+
+
+# DELETE TASK
+
+
+@app.delete(
+    "/tasks/{id}",
+    status_code=status.HTTP_204_NO_CONTENT
+)
+def delete_task(id: int):
+
+    # Check whether task exists
+    load_task_data(id)
+
+    # Delete task from SQLite
+    database.execute(
+        """
+        DELETE FROM tasks
+        WHERE id = ?
+        """,
+        (id,)
+    )
+
+    # Save changes
+    database.connection.commit()
+
+    # 204 means no response body
+    return Response(status_code=204)
