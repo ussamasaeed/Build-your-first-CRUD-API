@@ -1,4 +1,5 @@
+.env
 .FlyRankfastAPI
 trydatabase.ipynb
-tasks.db-journal
-tasks.db
+__pycache__/
+*.pyc
