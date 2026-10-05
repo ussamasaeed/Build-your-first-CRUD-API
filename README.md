@@ -1,5 +1,4 @@
 # Build-your-first-CRUD-API
-
 A FastAPI Task API (Create, Read, Update, Delete) backed by Postgres, with
 Docker Compose running the app and the database together. `/docs` has the
 interactive API documentation.
