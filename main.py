@@ -1,4 +1,9 @@
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv  # type: ignore[reportMissingImports]
+except ModuleNotFoundError:  # pragma: no cover
+    def load_dotenv(*_args, **_kwargs):
+        return False
+
 from fastapi import FastAPI
 
 load_dotenv()  # reads .env into os.environ before anything else touches it
