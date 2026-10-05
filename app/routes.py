@@ -12,7 +12,7 @@ def read_root():
     return {
         "name": "Task API",
         "version": "1.0",
-        "endpoints": ["/tasks"],
+        "endpoints": ["/tasks", "/auth/signup", "/auth/login", "/public/info", "/protected/profile", "/protected/dashboard", "/auth/logout"],
     }
 
 
