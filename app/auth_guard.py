@@ -4,7 +4,8 @@ All token checking lives here and nowhere else.
 """
 from dataclasses import dataclass
 
-from fastapi import Depends, Header, Request
+from fastapi import Depends, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 
@@ -22,14 +23,14 @@ async def unauthorized_handler(_request: Request, exc: Unauthorized) -> JSONResp
     return JSONResponse(status_code=401, content={"error": exc.message})
 
 
-def _extract_bearer_token(authorization: str | None) -> str | None:
-    """Token from 'Authorization: Bearer <token>', or None if missing/malformed."""
-    if not authorization:
-        return None
-    parts = authorization.strip().split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        return None
-    return parts[1]
+# Declares the Bearer scheme to OpenAPI, which is what puts the Authorize
+# padlock in Swagger UI. auto_error=False so a missing/malformed header reaches
+# our own code and produces our own {"error": ...} message instead of FastAPI's.
+bearer_scheme = HTTPBearer(
+    bearerFormat="JWT",
+    description="Paste the `access_token` returned by POST /auth/login (no 'Bearer ' prefix).",
+    auto_error=False,
+)
 
 
 @dataclass
@@ -42,11 +43,11 @@ class CurrentUser:
 
 
 async def require_user(
-    authorization: str | None = Header(default=None),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     supabase=Depends(get_supabase),
 ) -> CurrentUser:
-    token = _extract_bearer_token(authorization)
-    if token is None:
+    token = credentials.credentials.strip() if credentials else ""
+    if not token:
         raise Unauthorized("Access token required")
 
     # Network call to Supabase: catches expired, tampered and revoked tokens.
