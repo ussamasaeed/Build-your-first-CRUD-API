@@ -6,6 +6,7 @@ except ModuleNotFoundError:  # pragma: no cover
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from src.llm.triage_routes import router as triage_router
 
 load_dotenv()  # reads .env into os.environ before anything else touches it
 
@@ -20,3 +21,4 @@ app.include_router(router)
 app.include_router(auth_router)
 app.include_router(access_router)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.include_router(triage_router)
