@@ -140,3 +140,19 @@ volume rm pgdata` would wipe the data — that's the volume doing its job.
 The model client has a 30-second timeout. SDK automatic retries are disabled (`max_retries=0`); the application manages retries itself. It retries timeouts, HTTP 429, and HTTP 5xx responses up to three times, using exponential backoff with jitter. For HTTP 429, it respects the provider's `Retry-After` header. HTTP 400, 401, and 403 errors are never retried.
 
 Structured JSON logs record the prompt version, model, input and output tokens, duration, and repair status for model calls. The `LLM_ENABLED=false` environment variable disables model calls and returns a deterministic fallback.
+
+
+## Evaluation results
+
+- **Date:** 2026-11-18
+- **Prompt version:** triage-v1
+- **Evaluation set:** 8 hand-labelled cases
+- **Key field:** category
+- **Matched:** [YOUR ACTUAL RESULT]/8
+- **Category accuracy:** [YOUR ACTUAL PERCENTAGE]%
+
+### Failed cases
+
+[List the case IDs that failed and briefly explain what happened. Write "None" if all passed.]
+
+These results are from an actual run of `python scripts/run_eval.py`. They are not expected or simulated results.
