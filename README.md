@@ -133,3 +133,10 @@ volume rm pgdata` would wipe the data — that's the volume doing its job.
 | POST   | `/tasks`     | create a task      |
 | PUT    | `/tasks/{id}`| update a task      |
 | DELETE | `/tasks/{id}`| delete a task       |
+
+
+### Model timeout and retry policy
+
+The model client has a 30-second timeout. SDK automatic retries are disabled (`max_retries=0`); the application manages retries itself. It retries timeouts, HTTP 429, and HTTP 5xx responses up to three times, using exponential backoff with jitter. For HTTP 429, it respects the provider's `Retry-After` header. HTTP 400, 401, and 403 errors are never retried.
+
+Structured JSON logs record the prompt version, model, input and output tokens, duration, and repair status for model calls. The `LLM_ENABLED=false` environment variable disables model calls and returns a deterministic fallback.
